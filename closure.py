@@ -1,29 +1,13 @@
 import numpy as np
 import math
+from data_types import Angle
 
-def dms_to_rad(dms):
-    dms_split = math.modf(dms)
-
-    ms = str(round(dms_split[0],4)) + "0000"
-
-    d = float(str(dms_split[1]))
-    m = float(ms[2:4])
-    s = float(ms[4:6])
-
-    decimal = d + m/60 + s/3600
-
-    rad = math.radians(decimal)
-    return rad
 
 def calc_bearing(easting, northing):
     angle = np.arctan(easting/northing)
-    angle_degrees = (math.degrees(angle) + 360) % 360
 
-    total_seconds = angle_degrees * 3600
+    bearing_dms = Angle((math.degrees(angle) + 360) % 360, "decimal")
 
-    hours, remainder = divmod(total_seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    bearing_dms = str(int(hours)) + "d " + str(int(minutes)) + "m " + str(seconds) + "s"
     return bearing_dms
     
 def closure(vectors):
@@ -34,12 +18,10 @@ def closure(vectors):
     northing_list = [0]
 
     for i in range(len(vectors)):
-        bearing = vectors[i, 0]
-        bearing_rad = dms_to_rad(bearing)
+        bearing_rad = Angle(vectors[i, 0], "dms").radians
         distance = vectors[i, 1]
         dE = distance * np.sin(bearing_rad)
         dN = distance * np.cos(bearing_rad)
-
 
         easting = easting + dE
         northing = northing + dN
@@ -53,13 +35,13 @@ def closure(vectors):
     bearing = calc_bearing(easting, northing)
 
     print("==================")
-    print("Number of bearing distances: " + str(len(vectors)))
+    print(f"Number of bearing distances: {len(vectors)}")
     print("==================")
-    print("Delta E: " + str(easting))
-    print("Delta N: " + str(northing))
+    print(f"Delta E: {easting}")
+    print(f"Delta N: {northing}")
     print("==================")
-    print("Magnitude: " + str(magnitude))
-    print("Bearing: " + bearing)
+    print(f"Magnitude: {magnitude}")
+    print(f"Bearing: {bearing}")
     print("==================")
 
     return easting_list, northing_list
@@ -82,26 +64,17 @@ def gen_scr(easting_list, northing_list, vectors):
     for i in range(len(easting_list) - 1):
         start = (easting_list[i] + "," + northing_list[i])
         height = "0.875"
-        bearing = vectors[i, 0]
+        bearing = Angle(vectors[i, 0], "dms")
         distance = vectors[i, 1]
 
-        bearing_decimal = math.degrees(dms_to_rad(bearing))
-        angle = bearing_decimal if bearing_decimal < 179 else bearing_decimal + 180
+        angle = bearing if bearing.decimal < 179 else Angle(bearing.decimal + 180, "decimal")
 
+        bearing_text = f"text {start} {height} {angle.decimal} {angle.autocad}\n"
+        distance_text = f"text {start} {height} {angle.decimal} {distance}\n"
 
-        dms_split = math.modf(bearing)
-
-        ms = str(round(dms_split[0],4)) + "0000"
-
-        d = str(int(dms_split[1]))
-        m = ms[2:4]
-        s = ms[4:6]
-        dms = d + "^" + m + "'" if s == "00" else d + "^" + m + "'" + s + "\""
-
-        bearing_text = "text " + start + " " + height + " " + str(angle) + " " + dms + "\n"
-        distance_text = "text " + start + " " + height + " " + str(angle) + " " + str(distance) + "\n"
         f.write(bearing_text)
         f.write(distance_text)
+
     f.write(line)
     f.close()
         
