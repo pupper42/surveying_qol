@@ -1,53 +1,38 @@
 import numpy as np
 import math
-from data_types import Angle
-
-
-def calc_bearing(easting, northing):
-    angle = np.arctan(easting/northing)
-
-    bearing_dms = Angle((math.degrees(angle) + 360) % 360, "decimal")
-
-    return bearing_dms
+from data_types import Angle, Vector
     
 def closure(vectors):
-    easting = 0
-    northing = 0
+    misclose = Vector(0, 0, "cartesian")
 
     easting_list = [0]
     northing_list = [0]
 
     for i in range(len(vectors)):
-        bearing_rad = Angle(vectors[i, 0], "dms").radians
+        bearing= Angle(vectors[i, 0], "dms")
         distance = vectors[i, 1]
-        dE = distance * np.sin(bearing_rad)
-        dN = distance * np.cos(bearing_rad)
 
-        easting = easting + dE
-        northing = northing + dN
+        vector = Vector(distance, bearing, "polar")
 
-        easting_list.append(easting)
-        northing_list.append(northing)
+        misclose = misclose + vector
 
-        magnitude = np.linalg.norm((easting, northing))
-
-    
-    bearing = calc_bearing(easting, northing)
+        easting_list.append(vector.easting)
+        northing_list.append(vector.northing)
 
     print("==================")
     print(f"Number of bearing distances: {len(vectors)}")
     print("==================")
-    print(f"Delta E: {easting}")
-    print(f"Delta N: {northing}")
+    print(f"Delta E: {misclose.easting}")
+    print(f"Delta N: {misclose.northing}")
     print("==================")
-    print(f"Magnitude: {magnitude}")
-    print(f"Bearing: {bearing}")
+    print(f"Magnitude: {misclose.magnitude}")
+    print(f"Bearing: {misclose.angle}")
     print("==================")
 
     return easting_list, northing_list
 
 def gen_scr(easting_list, northing_list, vectors):
-    path = "scr/" + "script" + ".scr"
+    path = "scr/script.scr"
 
     easting_list = [str(x) for x in easting_list]
     northing_list = [str(x) for x in northing_list]
