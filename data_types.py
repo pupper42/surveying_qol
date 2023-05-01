@@ -1,5 +1,4 @@
 import math
-import numpy as np
 
 degree_sign = u"\u00b0"
 
@@ -103,8 +102,8 @@ class Vector:
         if self.northing == 0:
             self.angle == Angle(0, "deg")
         else:
-            self.angle = Angle((math.degrees(np.arctan(self.easting/self.northing)) + 360) % 360, "deg")
-        self.magnitude = np.linalg.norm((self.easting, self.northing))
+            self.angle = Angle((math.degrees(math.atan(self.easting/self.northing)) + 360) % 360, "deg")
+        self.magnitude = math.sqrt(self.easting**2 + self.northing**2)
 
 
     def __add__(self, other):

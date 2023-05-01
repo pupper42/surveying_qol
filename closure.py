@@ -16,7 +16,12 @@ def read_vectors_file(units):
         if units == "Metres" or units == "":
             vector = Vector(distance, bearing, "polar")
         elif units == "Feet and Inches":
-            distance = round(float(distance[:distance.index('f')]) * 0.3048 + float(distance[distance.index('f')+1:distance.index('i')]) * 0.0254, 2)
+            feet_to_m = float(distance[:distance.index('f')]) * 0.3048
+            if "i" in distance:
+                inches_to_m = float(distance[distance.index('f')+1:distance.index('i')]) * 0.0254
+            else:
+                inches_to_m = 0
+            distance = round(feet_to_m + inches_to_m, 2)
             vector = Vector(distance, bearing, "polar")
         elif units == "Links":
             distance = round(float(distance)*0.201168, 2)
